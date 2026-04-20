@@ -125,5 +125,39 @@ async incrementViews(@Param('id') id: string): Promise<ResponseDto> {
 6. 조회수가 1 증가한 것을 확인하면, 입력한 시작 글자가 플래그의 올바른 일부임을 확신할 수 있다.
 
 
+
+
 ## 실행 및 결과
 
+__Step 1.__ 생성한 계정으로 로그인 시도
+
+<img width="1254" height="536" alt="image" src="https://github.com/user-attachments/assets/8fc077a6-eeab-4be7-b4a3-39862d86d8f3" />
+
+<br>
+__Step 2.__ 메모 생성 페이지 접근
+
+<img width="1226" height="639" alt="image" src="https://github.com/user-attachments/assets/89fc3d7d-d85a-44a5-8a9b-62c977ae785b" />
+
+<br>
+__Step 3.__ 서버 내에 존재하지 않은 이미지 파일명 128개 요청 메모 작성
+<img width="958" height="465" alt="image" src="https://github.com/user-attachments/assets/51aa9edc-294d-4229-93ed-9a7676ab4cc3" />
+
+
+<br>
+
+__Step 4.__ 작성한 메모에 접근
+<img width="1241" height="624" alt="image" src="https://github.com/user-attachments/assets/688bfaab-3a2a-4f4b-a136-fd6d9f092bb7" />
+
+<br>
+__Step 5.__ 작성한 메모 공유
+<img width="1253" height="445" alt="image" src="https://github.com/user-attachments/assets/ee89bc1c-9b2e-4e28-bb1d-500fe4d36a42" />
+
+
+<br>
+__Step 6.__ 발급된 공유 키 확인
+<img width="993" height="457" alt="image" src="https://github.com/user-attachments/assets/79af6848-1511-4dd4-baa6-5b67c5c51be8" />
+
+
+<br>
+__Step 7.__ bot을 통한 공유 메모에 접근
+<img width="830" height="353" alt="image" src="https://github.com/user-attachments/assets/aad467a8-0b96-4230-9911-620b1d650859" />
