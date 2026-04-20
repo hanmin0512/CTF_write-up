@@ -56,11 +56,28 @@ getAdminImagePath(filename: string): string | null { //filename을 입력받아 
 
 
 
-### check_csrf() 함수 분석
+### getImageAdmin() 함수 분석
 
-```python
+```typescript
 
+@Get('/admin')
+@UseGuards(AdminGuard)
+async getImageAdmin(
+    @Query('filename') filename: string,
+    @Req() req: Request,
+    @Res() res: Response
+): Promise<void> {
+    const site = req.get('sec-fetch-site'); // 요청이 같은 도메인에서 왔는지 검사
 
+    if (site !== 'same-origin') throw new HttpException('Unauthorized.', 401); // 같은 도메인에서 요청한 것이 아니라면 401 에러
+
+    if (!filename) throw new HttpException('filename is required.', 400); //filename이 null이거나 없다면 400 에러
+
+    const imagePath = this.imageService.getAdminImagePath(filename);
+    if (!imagePath) return; // 404 에러가 아닌 함수만 빠져나가기 때문에 무한대기상태에 빠지며 이부분이 HTTP/2 스트림 128개를 고갈시키는 직접적인 원인이다.
+
+    return res.sendFile(imagePath);
+}
 
 ```
 
@@ -69,11 +86,17 @@ getAdminImagePath(filename: string): string | null { //filename을 입력받아 
 </p>
 
 
-### read_url() 함수 분석
+### incrementViews() 함수 분석
 
-```python
+```typescript
+// 특정 memo에 접근하여 해당 memo가 화면에 랜더링될 때 자동으로 호출됨 호출될 시 조회수 증가됨
+// 하지만 HTTP/2 stream이 꽉차서 호출이 안될 시 조회수 증가x
+@Post('/:id/view')
+async incrementViews(@Param('id') id: string): Promise<ResponseDto> {
+  await this.memoService.incrementViews(id);
 
-  
+  return { status: 200, message: 'Views incremented successfully' };
+}
 
 ```
 
