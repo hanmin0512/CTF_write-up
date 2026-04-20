@@ -160,4 +160,28 @@ __Step 6.__ 발급된 공유 키 확인
 
 <br>
 __Step 7.__ bot을 통한 공유 메모에 접근
-<img width="830" height="353" alt="image" src="https://github.com/user-attachments/assets/aad467a8-0b96-4230-9911-620b1d650859" />
+<img width="830" height="353" alt="image" src="https://github.com/user-attachments/assets/221fbf22-edf5-4b7a-965c-c097ca5e4f1a" />
+
+
+<br>
+__Step 8.__ bot을 통해 접근 시 view가 변화 확인 (원래 값 2였음)
+<img width="1176" height="613" alt="image" src="https://github.com/user-attachments/assets/f752d32e-47a3-4918-b4c9-034c4352438b" />
+
+<br>
+__Step 9.__ 새로운 메모 작성(127개 오류, 1개 정상 요청)
+<img width="1226" height="542" alt="image" src="https://github.com/user-attachments/assets/2215d911-b7b7-4c04-9b86-1a573e0ce877" />
+
+
+<br>
+__Step 10.__ 공유 키 발급
+<img width="1104" height="430" alt="image" src="https://github.com/user-attachments/assets/128bd87f-1d0b-4db9-8301-024369bc4797" />
+
+
+<br>
+__Step 11.__ bot을 통한 공유 메모 접근
+<img width="835" height="312" alt="image" src="https://github.com/user-attachments/assets/4551b0de-5ade-48f9-abbd-eff1ab65f6c6" />
+
+<br>
+__Step 12.__ 요청 마다 view가 오르는 것을 확인 
+<img width="1211" height="476" alt="image" src="https://github.com/user-attachments/assets/37cfa912-6b7c-4344-af02-8569c58d7b3e" />
+
