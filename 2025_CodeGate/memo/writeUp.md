@@ -140,7 +140,7 @@ __Step 2.__ 메모 생성 페이지 접근
 
 <br>
 __Step 3.__ 서버 내에 존재하지 않은 이미지 파일명 128개 요청 메모 작성
-<img width="958" height="465" alt="image" src="https://github.com/user-attachments/assets/51aa9edc-294d-4229-93ed-9a7676ab4cc3" />
+<img width="1230" height="561" alt="image" src="https://github.com/user-attachments/assets/f018435b-1f9a-41b0-84d8-f4db8f150d98" />
 
 
 <br>
