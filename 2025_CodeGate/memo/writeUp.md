@@ -1,1 +1,123 @@
-#1
+# CodeGate 2026 CTF WriteUp
+## memo (WEB)
+1. 핵심 취약점 분석 (Vulnerabilities)
+공격 기법: Blind XS-Leak (HTTP/2 Stream Exhaustion)
+
+응답 무한 대기 (Hanging) 취약점: ImageController에서 요청한 이미지 파일이 존재하지 않을 경우, 에러(404 Not Found)를 반환하거나 응답 객체를 명시적으로 종료(res.end())하지 않아 서버와 브라우저 간의 연결이 끊기지 않고 무한 대기 상태에 빠지는 결함이 존재함.
+
+관리자 API 부분 일치 (Partial Match) 로직: 관리자(Admin) 전용 엔드포인트인 /image/admin은 파일명 전체가 아닌, 시작 부분(startsWith)만 일치해도 해당 파일을 찾아 반환하는 논리적 취약점을 가짐. 이를 통해 긴 랜덤 해시값을 가진 플래그 파일의 이름을 한 글자씩 유추할 수 있음.
+
+2. 공격 원리 (Exploit Concept)
+현대 브라우저와 Nginx 서버가 사용하는 HTTP/2 프로토콜의 동시 스트림(Concurrent Streams) 제한을 악용함.
+
+Nginx는 하나의 연결 통로 안에서 동시에 처리할 수 있는 요청(스트림)의 개수를 128개로 제한(http2_max_concurrent_streams 128)하고 있음.
+
+악성 메모에 128개의 이미지 태그(<img>)를 삽입하여 관리자 봇(Bot)이 접근하게 만들면, 이 제한 수치를 인위적으로 고갈시킬 수 있음.
+
+3. Blind Oracle 구성 (참/거짓 추측 근거)
+페이지 접속 시 백그라운드에서 실행되는 '조회수 증가 API(POST /view)'의 성공 여부를 관찰하여 파일 존재 여부를 판별함.
+
+False (Miss / 파일이 없을 때): * 128개 요청 이미지가 전부 서버에 존재하지 않는 가짜 파일일 경우.
+
+서버가 응답을 닫지 않아 브라우저의 128개 통로(Stream)가 모두 대기 상태로 막힘.
+
+페이지 로딩 후 실행되어야 할 '조회수 증가 요청'이 네트워크 통로를 할당받지 못해 타임아웃 발생 ➔ 조회수 증가 X (0)
+
+True (Hit / 파일이 존재할 때): * 128개 요청 중 단 1개라도 이름의 시작 부분이 일치하는 진짜 파일(플래그 파일)이 섞여 있을 경우.
+
+서버가 진짜 사진을 반환한 후 해당 연결 1개를 정상적으로 종료해 줌.
+
+통로 1개가 비게 되면서, 대기하던 '조회수 증가 요청'이 서버로 전달됨 ➔ 조회수 증가 O (+1)
+
+### () 함수 분석
+  
+```javascript
+
+getAdminImagePath(filename: string): string | null {
+    const imagePath = this.resolveSafePath(filename);
+
+    if (imagePath && existsSync(imagePath)) return imagePath;
+
+    const files = readdirSync(this.getImageDir());
+    const matched = files.find(file => file.startsWith(filename));
+
+    if (!matched) return null;
+
+    return this.resolveSafePath(matched);
+}
+
+```
+
+<p align = "center"> 
+코드1
+</p>
+
+
+
+
+
+### check_csrf() 함수 분석
+
+```python
+
+
+
+```
+
+<p align = "center"> 
+코드2
+</p>
+
+
+### read_url() 함수 분석
+
+```python
+
+  
+
+```
+
+<p align = "center"> 
+코드3
+</p>
+
+
+
+### vuln() 함수 분석
+
+```python
+
+
+
+```
+
+<p align = "center"> 
+코드4
+</p>
+
+
+
+### change_password() 함수 분석
+
+
+
+```python
+
+
+```
+
+<p align = "center"> 
+코드5
+</p>
+
+
+
+## 최종 시나리오
+
+1. 
+
+
+공격 구문: ``` ```
+
+## 실행 및 결과
+
