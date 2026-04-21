@@ -378,5 +378,47 @@ if __name__ == "__main__":
     print("==================================================")
     print(f"최종 획득한 타겟 파일명: {known_flag}")
     print("==================================================")
-    print(f"[!] 이제 브라우저에서 https://127.0.0.1/api/image/admin?filename={known_flag}.png 로 접속하세요!")
+    print(f"[!] 이제 브라우저에서 https://127.0.0.1/api/image?filename={known_flag}.png 로 접속하세요!")
+```
+
+
+# 취약점 패치
+## 취약한 코드 패치
+```
+// image.controller.ts
+ @Get('/')
+    async getImage(
+        @Query('filename') filename: string,
+        @Res() res: Response
+    ): Promise<void> {
+        if (!filename) throw new HttpException('filename is required.', 400);
+
+        const imagePath = this.imageService.getImagePath(filename);
+        if (!imagePath) {
+    			res.status(404).json({ message:'file not found'}); // 파일이름 없을 시 404 반환
+    			return;
+    		}
+        return res.sendFile(imagePath);
+    }
+
+    @Get('/admin')
+    @UseGuards(AdminGuard)
+    async getImageAdmin(
+        @Query('filename') filename: string,
+        @Req() req: Request,
+        @Res() res: Response
+    ): Promise<void> {
+        const site = req.get('sec-fetch-site');
+
+        if (site !== 'same-origin') throw new HttpException('Unauthorized.', 401);
+
+        if (!filename) throw new HttpException('filename is required.', 400); 
+
+        const imagePath = this.imageService.getAdminImagePath(filename);
+        if (!imagePath) {
+			    res.status(404).json({ message:'file not found'}); // 파일 이름 없을 시 404 반환
+			    return;
+		    }
+        return res.sendFile(imagePath);
+    }
 ```
