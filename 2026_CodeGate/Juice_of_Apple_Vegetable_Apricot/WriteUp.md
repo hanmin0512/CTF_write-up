@@ -72,6 +72,7 @@ public class StatusServlet extends HttpServlet {
             return;
         }
 
+		// Command Excution Sink 이부분 집중
         String cmd = "jcmd " + pid + " VM.version";
         Process p = Runtime.getRuntime().exec(cmd);
 
@@ -111,6 +112,9 @@ public class StatusServlet extends HttpServlet {
 <p align = "center"> 
 코드3
 </p>
+
+Command Excution Sink 주석 부분을 확인해보면 get 파리미터의 
+
 
 
 ## 최종 시나리오
