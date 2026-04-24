@@ -1,5 +1,5 @@
 # CodeGate 2026 CTF WriteUp
-## memo (WEB)
+## Juice_of_Apple_Vegetable_Apricot (WEB)
 1. 핵심 취약점 분석 (Vulnerabilities)
 공격 기법: Blind XS-Leak (HTTP/2 Stream Exhaustion)
 
@@ -51,7 +51,7 @@ RUN useradd -r -s /usr/sbin/nologin ctf \
 
 
 
-### incrementViews() 함수 분석
+### StatusServlet 클래스 분석
 
 ```java
 
