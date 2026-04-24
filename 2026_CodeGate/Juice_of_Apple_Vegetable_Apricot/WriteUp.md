@@ -113,9 +113,19 @@ public class StatusServlet extends HttpServlet {
 코드3
 </p>
 
-Command Excution Sink 주석 부분을 확인해보면 get 파리미터의 
+Command Excution Sink 주석 부분을 확인해보면 get 파리미터의 pid 부분을 가져와서 jcmd pid VM.version 이런 형태의 jcmd 프로그램의 명령어를 실행하는 것을 알 수 있다.
+즉 Argument Injection임을 파악했다.
 
+### Argument Injection 동작 분석
 
+공격 벡터
+```
+?pid=1+help
+```
+
+<img width="1282" height="714" alt="image" src="https://github.com/user-attachments/assets/2d4276a8-5df5-473b-a3f0-4881f72b50f9" />
+
+정상 요청과 공격 벡터를 적용한 반응이 서로 다르며 에러를이르키지 않는 정상 응답으로 나오는 것을 확인할 수 있다. 
 
 ## 최종 시나리오
 본 취약점들을 연계하여 플래그(Flag)를 탈취하는 전체 공격 흐름은 다음과 같다.
