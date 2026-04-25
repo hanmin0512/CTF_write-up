@@ -1,13 +1,13 @@
 # CodeGate 2026 CTF WriteUp
 ## Juice_of_Apple_Vegetable_Apricot (WEB)
 1. 핵심 취약점 분석 (Vulnerabilities)
-공격 기법: Blind XS-Leak (HTTP/2 Stream Exhaustion)
+공격 기법: Argument Injection (jcmd) 및 JFR (Java Flight Recorder) Payload Smuggling 또는 HTTP Method Exception을 이용한 JFR 메모리 오염
 
 
 2. 공격 원리 (Exploit Concept)
 
 
-3. 핵식 공격기법 구성 ex) Blind Oracle 구성 (참/거짓 추측 근거)
+3. 핵식 공격기법 구성: JFR 시작 ➔ 에러 유발 ➔ 셸 실행
 
 
 ### Dockerfile 핵심 부분 분석
